@@ -16,6 +16,10 @@ class Movement(FaceRecon):
 	def __init__(self,path):
 		FaceRecon.__init__(self,path)
 		self.activate=False
+		self.init_act = BaseMovement.HeadRightLeftControl485Send(0,100)
+		ser.write(self.init_act.encode())
+		time.sleep(1)
+
 
 
 	@classmethod
@@ -57,7 +61,7 @@ class Movement(FaceRecon):
 		if self.x < 100 and self.turn == True:
 			# time.sleep(3)
 			print("向左转")
-			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(60, 100)
+			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(15, 100)
 			print(Out_Send_Cot)
 			ser.write(bytes(Out_Send_Cot))
 			time.sleep(3)
@@ -67,11 +71,11 @@ class Movement(FaceRecon):
 
 		if self.x > 400 and self.turn == True:
 			print("向右转")
-			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(-60, 100)
-			ser.write(bytes(Out_Send_Cot))
+			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(-15, 100)
+			ser.write(Out_Send_Cot.encode())
 			time.sleep(3)
 			Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
-			ser.write(bytes(Out_Send_Pos))
+			ser.write(Out_Send_Pos.encode())
 			time.sleep(0.1)
 
 		if self.x >= 100 and self.x <= 400 and self.turn == False:
@@ -151,18 +155,6 @@ class Receive():
 
 if __name__ == '__main__':
 	rc = Receive()
-	# while True:
-	# 	time.sleep(3)
-	# 	movement(180)
-	# 	rc.jieshou()
-
-
-	# t1 = threading.Thread(target=rc.jieshou())
-	# t1.start()
-	# while True:
-	# 	time.sleep(3)
-	# 	movement(180)
-
 	mv = Movement.run()
 	mv.get_attr()
 	while True:
@@ -170,6 +162,12 @@ if __name__ == '__main__':
 		mv.turn_or_not()
 		mv.movement()
 		rc.jieshou()
+
+	# t1 = threading.Thread(target=rc.jieshou())
+	# t1.start()
+	# while True:
+	# 	time.sleep(3)
+	# 	movement(180)
 
 
 
