@@ -61,7 +61,7 @@ def HeadRightLeftControl485Send(m_Angle,m_rotatespeed):
 def HeadUpDownPosAngle(Send_Buff):
 	Send_Buff = []
 	move_attr =[0x5A,0x5A,0x08,0x02,0x33,0x3D]
-	for i in range (0, 5):
+	for i in range (0, 6):
 		Send_Buff.append(move_attr[i])
 	return Send_Buff
 
@@ -69,14 +69,15 @@ def HeadUpDownPosAngle(Send_Buff):
 def HeadRightLeftPosAngle():
 	Send_Buff = []
 	move_attr = [0x5A, 0x5A, 0x08, 0x02, 0x34, 0x3E]
-	for i in range(0, 5):
+	for i in range(0, 6):
 		Send_Buff.append(move_attr[i])
 	return Send_Buff
 
 if __name__ == '__main__':
 	Send_Buff=[]
-	OUT_Sendbuff=HeadRightLeftControl485Send(-15,100)
+	OUT_Sendbuff=HeadRightLeftPosAngle()
 	print(OUT_Sendbuff)
+
 
 
 

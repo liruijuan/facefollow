@@ -37,7 +37,7 @@ class Movement(FaceRecon):
 		NUM_WINDOW_CHUNKS = 30
 		buff_flags = [0] * NUM_WINDOW_CHUNKS
 		while True:
-			print("x的坐标", self.x)
+			# print("x的坐标", self.x)
 			self.turn = False
 			time.sleep(0.1)
 			if self.x < 100 or self.x > 400:
@@ -95,7 +95,7 @@ class Receive():
 		# while True:
 			while ser.inWaiting()>0:
 				myout=ser.read(1) #串口接收数据,逐一字节接收
-				print(myout)
+				# print(myout)
 				rcvdat =ord(myout)
 				# rcvdat =''.join(map(lambda x:('0x' if len(hex(x))>=4 else '0x0')+hex(x)[2:],myout))
 				# print(rcvdat==0xa5)
@@ -134,7 +134,7 @@ class Receive():
 						self.state_machine =5
 				elif self.state_machine == 5:
 					print("rcvdat0x",hex(rcvdat))
-					print("sumchkm:0x",int(self.sumchkm))
+					print("sumchkm:0x",hex(self.sumchkm))
 					if self.sumchkm == rcvdat:  #判断校验和是否正确
 						retval =1  #置标志，表示一个数据包接收到
 						if self.m_ucData[0] == 0x31 and self.lencnt == 0x02:
@@ -156,8 +156,8 @@ class Receive():
 
 if __name__ == '__main__':
 	rc = Receive()
-	t1 = threading.Thread(target=rc.jieshou())
-	t1.start()
+	# t1 = threading.Thread(target=rc.jieshou())
+	# t1.start()
 
 	mv = Movement.run()
 	mv.get_attr()
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 		time.sleep(1)
 		mv.turn_or_not()
 		mv.movement()
-		# rc.jieshou()
+		rc.jieshou()
 
 
 	# while True:
