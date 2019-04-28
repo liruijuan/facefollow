@@ -33,7 +33,6 @@ def Get_Sum(Send_Buff, len):
 	for i in range(0, len):
 		sum += Send_Buff[i+2]  # 将16进制转化为10进制进行计算求和
 		# print(sum)
-
 	return sum
 
 def HeadRightLeftControl485Send(m_Angle,m_rotatespeed):
@@ -43,28 +42,28 @@ def HeadRightLeftControl485Send(m_Angle,m_rotatespeed):
 		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x32, m_Angle, 0x00, m_rotatespeed, 0x00]
 		for i in range(0,9):
 			Send_Buff.append(move_attr[i])
+		SUM = Get_Sum(Send_Buff, 7)
+		Send_Buff.append(SUM)
+		return Send_Buff
 
 	if m_Angle < 0:
 		# in_buff_m_Angle = hex(16 ** 7 - 15)[-2:]
-		m_Angle = 256 + m_Angle
-		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x32, m_Angle, 0xFF, m_rotatespeed, 0x00]
+		m_Angle_in = 256 + m_Angle
+		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x32, m_Angle_in, 0xFF, m_rotatespeed, 0x00]
 
 		for i in range(0, 9):
 			Send_Buff.append(move_attr[i])
 
-	# SUM =0
-	SUM = Get_Sum(Send_Buff, 7)
-	Send_Buff.append(SUM)
-	Send_Buff_End= ''.join(map(lambda x: ('0x' if len(hex(x)) >= 4 else '0x0') + hex(x)[2:], Send_Buff))
-	return Send_Buff_End
+		SUM = move_attr[2]+move_attr[3]+move_attr[4]+move_attr[5]-move_attr[6]+move_attr[7]+move_attr[8]-1
+		Send_Buff.append(SUM)
+		return Send_Buff
 
 def HeadUpDownPosAngle(Send_Buff):
 	Send_Buff = []
 	move_attr =[0x5A,0x5A,0x08,0x02,0x33,0x3D]
 	for i in range (0, 5):
 		Send_Buff.append(move_attr[i])
-	Send_Buff_End = ''.join(map(lambda x: ('0x' if len(hex(x)) >= 4 else '0x0') + hex(x)[2:], Send_Buff))
-	return Send_Buff_End
+	return Send_Buff
 
 
 def HeadRightLeftPosAngle():
@@ -72,17 +71,13 @@ def HeadRightLeftPosAngle():
 	move_attr = [0x5A, 0x5A, 0x08, 0x02, 0x34, 0x3E]
 	for i in range(0, 5):
 		Send_Buff.append(move_attr[i])
-	Send_Buff_End = ''.join(map(lambda x: ('0x' if len(hex(x)) >= 4 else '0x0') + hex(x)[2:], Send_Buff))
-	return Send_Buff_End
+	return Send_Buff
 
 if __name__ == '__main__':
 	Send_Buff=[]
-	OUT_Sendbuff=HeadRightLeftControl485Send(60,100)
+	OUT_Sendbuff=HeadRightLeftControl485Send(-15,100)
 	print(OUT_Sendbuff)
 
-
-	# OUT_Sendbuff1 = HeadRightLeftPosAngle()
-	# print(OUT_Sendbuff1)
 
 
 

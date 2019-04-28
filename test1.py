@@ -23,4 +23,5 @@ for i in range(0,100-1):
 	myinput = bytes(Send_Buff)
 	ser.write(myinput)
 	print(ser.readline())
+
 ser.close()

@@ -17,7 +17,7 @@ class Movement(FaceRecon):
 		FaceRecon.__init__(self,path)
 		self.activate=False
 		self.init_act = BaseMovement.HeadRightLeftControl485Send(0,100)
-		ser.write(self.init_act.encode())
+		ser.write(bytes(self.init_act))
 		time.sleep(1)
 
 
@@ -72,10 +72,10 @@ class Movement(FaceRecon):
 		if self.x > 400 and self.turn == True:
 			print("向右转")
 			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(-15, 100)
-			ser.write(Out_Send_Cot.encode())
+			ser.write(bytes(Out_Send_Cot))
 			time.sleep(3)
 			Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
-			ser.write(Out_Send_Pos.encode())
+			ser.write(bytes(Out_Send_Pos))
 			time.sleep(0.1)
 
 		if self.x >= 100 and self.x <= 400 and self.turn == False:
@@ -95,6 +95,7 @@ class Receive():
 		# while True:
 			while ser.inWaiting()>0:
 				myout=ser.read(1) #串口接收数据,逐一字节接收
+				print(myout)
 				rcvdat =ord(myout)
 				# rcvdat =''.join(map(lambda x:('0x' if len(hex(x))>=4 else '0x0')+hex(x)[2:],myout))
 				# print(rcvdat==0xa5)
@@ -155,19 +156,24 @@ class Receive():
 
 if __name__ == '__main__':
 	rc = Receive()
+	t1 = threading.Thread(target=rc.jieshou())
+	t1.start()
+
 	mv = Movement.run()
 	mv.get_attr()
 	while True:
 		time.sleep(1)
 		mv.turn_or_not()
 		mv.movement()
-		rc.jieshou()
+		# rc.jieshou()
 
-	# t1 = threading.Thread(target=rc.jieshou())
-	# t1.start()
+
 	# while True:
 	# 	time.sleep(3)
 	# 	movement(180)
+
+	# while True:
+	# 	rc.jieshou()
 
 
 
