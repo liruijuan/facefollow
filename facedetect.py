@@ -22,6 +22,8 @@ class FaceRecon():
 		self.is_face = False
 		self.quit = False
 		self.num=1
+		self.offset_x = 0
+		self.offset_y = 0
 
 	def capture_image(self):
 		# 抓取一帧视频q
@@ -36,7 +38,8 @@ class FaceRecon():
 			self.is_face = True
 			for (x, y, w, h) in self.faces:
 				cv2.rectangle(self.frame, (x,y), (x+w,y+h), (0, 0, 255),4)
-				return (x, y, w, h)
+				self.calculate_offset(x, y, w, h)
+
 				# print("leftright",self.x,"  updown",self.y)
 				# self.followface()
 
@@ -51,25 +54,20 @@ class FaceRecon():
 		else:
 			self.is_face = False
 
-	def calculate_offset(self):
+
+	def calculate_offset(self,x, y, w, h):
 		'''
 		计算人脸再画面中的偏移量，
 		偏移量取值范围：[-1, 1]
 		'''
-		if self.detection() is not None:
-			x, y, w, h = self.detection()
-			img_width = self.video.get(3)
-			img_height = self.video.get(4)
-			face_x = float(x + w/2.0)
-			face_y = float(y + h/2.0)
-			# 人脸再画面中心x轴上的偏移量
-			offset_x = float(face_x / img_width - 0.5) * 2
-			# 人脸再画面中心y轴上的偏移量
-			offset_y = float(face_y / img_height - 0.5) * 2
-			return (offset_x, offset_y)
-		else:
-			(offset_x, offset_y) = 0, 0
-			return (offset_x, offset_y)
+		img_width = self.video.get(3)
+		img_height = self.video.get(4)
+		face_x = float(x + w/2.0)
+		face_y = float(y + h/2.0)
+		# 人脸再画面中心x轴上的偏移量
+		self.offset_x = float(face_x / img_width - 0.5) * 2
+		# 人脸再画面中心y轴上的偏移量
+		self.offset_y = float(face_y / img_height - 0.5) * 2
 
 
 

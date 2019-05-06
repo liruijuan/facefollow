@@ -6,23 +6,29 @@ import sys
 
 from thd import MyThread
 from facedetect import FaceRecon
-from section_control import SectionControl
 import BaseMovement
 
 Send_Buff = []
 ser =serial.Serial('COM3',115200,timeout=1)#这是我的串口，测试连接成功，没毛病
 
+offset_dead_block = 0.2  # 偏移量死区大小
+rightlef_kp = 40  # 控制舵机旋转的比例系数
+# last_rigthtleft_degree =0 # 上一次左右旋转舵机的角度
+# last_updown_degree = 0  # 上一次上下旋转舵机的角度
 
 
 
-class Movement(FaceRecon,SectionControl):
-
+class Movement(FaceRecon):
 	def __init__(self,path):
 		FaceRecon.__init__(self,path)
 		self.activate=False
 		self.init_act = BaseMovement.HeadRightLeftControl485Send(0,100)
 		ser.write(bytes(self.init_act))
 		time.sleep(1)
+		self.next_rightleft_degree =0
+		self.next_updown_degree = 0
+		self.last_rigthtleft_degree = 0
+		self.last_updown_degree = 0
 
 
 	@classmethod
@@ -34,12 +40,51 @@ class Movement(FaceRecon,SectionControl):
 		t.start()
 
 	def start(self):
-		offset_x, offset_y = self.calculate_offset()
-		next_rightleft_degree = self.HeadRightLeftControl(offset_x)
+		self.next_rightleft_degree = -self.HeadRightLeftControl(self.offset_x)
 		# next_updown_degree = mv.HeadupdownControl(offset_y)
-		self.movement(next_rightleft_degree)
+		self.movement(self.next_rightleft_degree)
 		# self.movement(next_updown_degree)
-		self.last_rigthtleft_degree = next_rightleft_degree
+		self.last_rigthtleft_degree = self.next_rightleft_degree
+
+	def HeadRightLeftControl(self, offset_x):
+		'''
+		头部左右旋转舵机的比例控制
+		这里舵机使用开环控制
+		'''
+		# 设置最小阈值
+		if abs(offset_x) < offset_dead_block:
+			offset_x = 0
+		# offset范围在-60 到60左右
+		delta_degree = offset_x * rightlef_kp
+		# 计算得到新的左右旋转舵机的角度
+		self.next_rightleft_degree = self.last_rigthtleft_degree + delta_degree
+		# 添加边界检测
+		if self.next_rightleft_degree < -60:
+			self.next_rightleft_degree = 0
+		elif self.next_rightleft_degree > 60:
+			self.next_rightleft_degree = 60
+
+		return int(self.next_rightleft_degree)
+
+
+	def HeadupdownControl(self, offset_y):
+		'''
+		头部上下旋转舵机的比例控制
+		这里舵机使用开环控制
+		'''
+		# 设置最小阈值
+		if abs(offset_y) < offset_dead_block:
+			offset_y = 0
+		# offset范围在-60 到60左右
+		delta_degree = offset_y * rightlef_kp
+		# 计算得到新的上下旋转舵机的角度
+		next_updown_degree = self.last_updown_degree + delta_degree
+		# 添加边界检测
+		if next_updown_degree < -60:
+			next_updown_degree = 0
+		elif next_updown_degree > 60:
+			next_updown_degree = 60
+		return int(next_updown_degree)
 
 	def movement(self,next_rightleft_degree):
 		# while True:
@@ -48,9 +93,10 @@ class Movement(FaceRecon,SectionControl):
 			print(Out_Send_Cot)
 			ser.write(bytes(Out_Send_Cot))
 			time.sleep(3)
-			Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
-			ser.write(bytes(Out_Send_Pos))
-			time.sleep(0.1)
+			# Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
+			# ser.write(bytes(Out_Send_Pos))
+			# time.sleep(0.1)
+
 
 class Receive():
 	def __init__(self):
