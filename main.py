@@ -6,13 +6,17 @@ import sys
 
 from thd import MyThread
 from facedetect import FaceRecon
+from section_control import SectionControl
 import BaseMovement
 
 Send_Buff = []
 ser =serial.Serial('COM3',115200,timeout=1)#这是我的串口，测试连接成功，没毛病
 
 
-class Movement(FaceRecon):
+
+
+class Movement(FaceRecon,SectionControl):
+
 	def __init__(self,path):
 		FaceRecon.__init__(self,path)
 		self.activate=False
@@ -21,66 +25,32 @@ class Movement(FaceRecon):
 		time.sleep(1)
 
 
-
 	@classmethod
 	def run(cls):
 		return cls('database/haarcascades/haarcascade_frontalface_alt2.xml')
 
-
 	def get_attr(self):
-		t = MyThread(self.imag_show)
+		t = MyThread(self.img_show)
 		t.start()
 
-	def turn_or_not(self):
+	def start(self):
+		offset_x, offset_y = self.calculate_offset()
+		next_rightleft_degree = self.HeadRightLeftControl(offset_x)
+		# next_updown_degree = mv.HeadupdownControl(offset_y)
+		self.movement(next_rightleft_degree)
+		# self.movement(next_updown_degree)
+		self.last_rigthtleft_degree = next_rightleft_degree
 
-		buffer_index = 0
-		NUM_WINDOW_CHUNKS = 30
-		buff_flags = [0] * NUM_WINDOW_CHUNKS
-		while True:
-			# print("x的坐标", self.x)
-			self.turn = False
-			time.sleep(0.1)
-			if self.x < 100 or self.x > 400:
-				self.active = True
-			else:
-				self.active = False
-			# sys.stdout.write('1' if self.active else '_')
-			buff_flags[buffer_index] = 1 if self.active else 0
-			buffer_index += 1
-			buffer_index %= NUM_WINDOW_CHUNKS
-			# print(buff_flags)
-			num_leftright = sum(buff_flags)
-			if num_leftright > 0.96 * NUM_WINDOW_CHUNKS:  # 检测到的人脸在一定时间内均在一个方向，开始发动转动信号
-				print("yes")
-				self.turn = True
-				break
-
-	def movement(self):
+	def movement(self,next_rightleft_degree):
 		# while True:
 			# time.sleep(3)
-		if self.x < 100 and self.turn == True:
-			# time.sleep(3)
-			print("向左转")
-			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(15, 100)
+			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(next_rightleft_degree, 100)
 			print(Out_Send_Cot)
 			ser.write(bytes(Out_Send_Cot))
 			time.sleep(3)
 			Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
 			ser.write(bytes(Out_Send_Pos))
 			time.sleep(0.1)
-
-		if self.x > 400 and self.turn == True:
-			print("向右转")
-			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(-15, 100)
-			ser.write(bytes(Out_Send_Cot))
-			time.sleep(3)
-			Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
-			ser.write(bytes(Out_Send_Pos))
-			time.sleep(0.1)
-
-		if self.x >= 100 and self.x <= 400 and self.turn == False:
-			print("在中间")
-			BaseMovement.HeadRightLeftPosAngle()
 
 class Receive():
 	def __init__(self):
@@ -163,8 +133,7 @@ if __name__ == '__main__':
 	mv.get_attr()
 	while True:
 		time.sleep(1)
-		mv.turn_or_not()
-		mv.movement()
+		mv.start()
 		rc.jieshou()
 
 

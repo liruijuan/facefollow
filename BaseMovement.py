@@ -35,12 +35,13 @@ def Get_Sum(Send_Buff, len):
 		# print(sum)
 	return sum
 
-def HeadRightLeftControl485Send(m_Angle,m_rotatespeed):
+def HeadRightLeftControl485Send(m_Angle, m_rotatespeed):
 	Send_Buff = []
 	if m_Angle >= 0:
-		# in_buff_m_Angle = hex(m_Angle) # 将数据转成十六进制字符串
+		in_buff_m_Angle = hex(m_Angle)  # 将数据转成十六进制字符串
+		print(in_buff_m_Angle)
 		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x32, m_Angle, 0x00, m_rotatespeed, 0x00]
-		for i in range(0,9):
+		for i in range(0, 9):
 			Send_Buff.append(move_attr[i])
 		SUM = Get_Sum(Send_Buff, 7)
 		Send_Buff.append(SUM)
@@ -54,7 +55,8 @@ def HeadRightLeftControl485Send(m_Angle,m_rotatespeed):
 		for i in range(0, 9):
 			Send_Buff.append(move_attr[i])
 
-		SUM = move_attr[2]+move_attr[3]+move_attr[4]+move_attr[5]-move_attr[6]+move_attr[7]+move_attr[8]-1
+		SUM = move_attr[2] + move_attr[3] + move_attr[4] + move_attr[5] - move_attr[6] + move_attr[7] + move_attr[
+			8] - 2
 		Send_Buff.append(SUM)
 		return Send_Buff
 
@@ -75,7 +77,7 @@ def HeadRightLeftPosAngle():
 
 if __name__ == '__main__':
 	Send_Buff=[]
-	OUT_Sendbuff=HeadRightLeftPosAngle()
+	OUT_Sendbuff=HeadRightLeftControl485Send(-40,100)
 	print(OUT_Sendbuff)
 
 
