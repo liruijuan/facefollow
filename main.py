@@ -11,7 +11,7 @@ import BaseMovement
 Send_Buff = []
 ser =serial.Serial('COM3',115200,timeout=1)#这是我的串口，测试连接成功，没毛病
 
-offset_dead_block = 0.2  # 偏移量死区大小
+offset_dead_block = 0.3  # 偏移量死区大小
 rightlef_kp = 40  # 控制舵机旋转的比例系数
 # last_rigthtleft_degree =0 # 上一次左右旋转舵机的角度
 # last_updown_degree = 0  # 上一次上下旋转舵机的角度
@@ -76,7 +76,7 @@ class Movement(FaceRecon):
 		if abs(offset_y) < offset_dead_block:
 			offset_y = 0
 		# offset范围在-60 到60左右
-		delta_degree = offset_y * rightlef_kp
+		delta_degree = -offset_y * rightlef_kp
 		# 计算得到新的上下旋转舵机的角度
 		next_updown_degree = self.last_updown_degree + delta_degree
 		# 添加边界检测
