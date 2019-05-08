@@ -39,7 +39,7 @@ def HeadRightLeftControl485Send(m_Angle, m_rotatespeed):
 	Send_Buff = []
 	if m_Angle >= 0:
 		in_buff_m_Angle = hex(m_Angle)  # 将数据转成十六进制字符串
-		print(in_buff_m_Angle)
+		# print(in_buff_m_Angle)
 		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x32, m_Angle, 0x00, m_rotatespeed, 0x00]
 		for i in range(0, 9):
 			Send_Buff.append(move_attr[i])
@@ -59,6 +59,32 @@ def HeadRightLeftControl485Send(m_Angle, m_rotatespeed):
 			8] - 2
 		Send_Buff.append(SUM)
 		return Send_Buff
+
+def HeadUpDownControl485Send(m_Angle, m_rotatespeed):
+	Send_Buff = []
+	if m_Angle >= 0:
+		in_buff_m_Angle = hex(m_Angle)  # 将数据转成十六进制字符串
+		# print(in_buff_m_Angle)
+		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x31, m_Angle, 0x00, m_rotatespeed, 0x00]
+		for i in range(0, 9):
+			Send_Buff.append(move_attr[i])
+		SUM = Get_Sum(Send_Buff, 7)
+		Send_Buff.append(SUM)
+		return Send_Buff
+
+	if m_Angle < 0:
+		# in_buff_m_Angle = hex(16 ** 7 - 15)[-2:]
+		m_Angle_in = 256 + m_Angle
+		move_attr = [0x5A, 0x5A, 0x08, 0x06, 0x31, m_Angle_in, 0xFF, m_rotatespeed, 0x00]
+
+		for i in range(0, 9):
+			Send_Buff.append(move_attr[i])
+
+		SUM = move_attr[2] + move_attr[3] + move_attr[4] + move_attr[5] - move_attr[6] + move_attr[7] + move_attr[
+			8] - 2
+		Send_Buff.append(SUM)
+		return Send_Buff
+
 
 def HeadUpDownPosAngle(Send_Buff):
 	Send_Buff = []

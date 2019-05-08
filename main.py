@@ -11,8 +11,10 @@ import BaseMovement
 Send_Buff = []
 ser =serial.Serial('COM3',115200,timeout=1)#这是我的串口，测试连接成功，没毛病
 
-offset_dead_block = 0.3  # 偏移量死区大小
+x_offset_dead_block = 0.3  # 偏移量死区大小
+y_offset_dead_block = 0.4  # 偏移量死区大小
 rightlef_kp = 40  # 控制舵机旋转的比例系数
+updpwn_kp = 3  # 控制舵机旋转的比例系数
 # last_rigthtleft_degree =0 # 上一次左右旋转舵机的角度
 # last_updown_degree = 0  # 上一次上下旋转舵机的角度
 
@@ -41,10 +43,10 @@ class Movement(FaceRecon):
 
 	def start(self):
 		self.next_rightleft_degree = -self.HeadRightLeftControl(self.offset_x)
-		# next_updown_degree = mv.HeadupdownControl(offset_y)
-		self.movement(self.next_rightleft_degree)
-		# self.movement(next_updown_degree)
+		self.next_updown_degree = -self.HeadupdownControl(self.offset_y)
+		self.movement(self.next_rightleft_degree,self.next_updown_degree)
 		self.last_rigthtleft_degree = self.next_rightleft_degree
+		self.last_updown_degree = self.next_updown_degree
 
 	def HeadRightLeftControl(self, offset_x):
 		'''
@@ -52,7 +54,7 @@ class Movement(FaceRecon):
 		这里舵机使用开环控制
 		'''
 		# 设置最小阈值
-		if abs(offset_x) < offset_dead_block:
+		if abs(offset_x) < x_offset_dead_block:
 			offset_x = 0
 		# offset范围在-60 到60左右
 		delta_degree = offset_x * rightlef_kp
@@ -73,7 +75,7 @@ class Movement(FaceRecon):
 		这里舵机使用开环控制
 		'''
 		# 设置最小阈值
-		if abs(offset_y) < offset_dead_block:
+		if abs(offset_y) < y_offset_dead_block:
 			offset_y = 0
 		# offset范围在-60 到60左右
 		delta_degree = -offset_y * rightlef_kp
@@ -86,16 +88,19 @@ class Movement(FaceRecon):
 			next_updown_degree = 60
 		return int(next_updown_degree)
 
-	def movement(self,next_rightleft_degree):
+	def movement(self,next_rightleft_degree, next_updown_degree):
 		# while True:
 			# time.sleep(3)
 			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(next_rightleft_degree, 100)
-			print(Out_Send_Cot)
 			ser.write(bytes(Out_Send_Cot))
 			time.sleep(3)
 			# Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
 			# ser.write(bytes(Out_Send_Pos))
 			# time.sleep(0.1)
+
+			Out_Send_Cot = BaseMovement.HeadUpDownControl485Send(next_updown_degree, 100)
+			ser.write(bytes(Out_Send_Cot))
+			time.sleep(3)
 
 
 class Receive():
