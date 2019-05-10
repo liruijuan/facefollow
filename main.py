@@ -6,15 +6,15 @@ import sys
 
 from thd import MyThread
 from facedetect import FaceRecon
-import BaseMovement
+from BaseMovement import HeadRightLeftControl485Send, HeadUpDownControl485Send
 
 Send_Buff = []
 ser =serial.Serial('COM3',115200,timeout=1)#这是我的串口，测试连接成功，没毛病
 
-x_offset_dead_block = 0.3  # 偏移量死区大小
-y_offset_dead_block = 0.4  # 偏移量死区大小
-rightlef_kp = 40  # 控制舵机旋转的比例系数
-updpwn_kp = 3  # 控制舵机旋转的比例系数
+x_offset_dead_block = 0.3  # x偏移量死区大小
+y_offset_dead_block = 0.2  # y偏移量死区大小
+rightlef_kp = 30  # 控制舵机旋转的比例系数
+updown_kp = 3  # 控制舵机旋转的比例系数
 # last_rigthtleft_degree =0 # 上一次左右旋转舵机的角度
 # last_updown_degree = 0  # 上一次上下旋转舵机的角度
 
@@ -24,9 +24,12 @@ class Movement(FaceRecon):
 	def __init__(self,path):
 		FaceRecon.__init__(self,path)
 		self.activate=False
-		self.init_act = BaseMovement.HeadRightLeftControl485Send(0,100)
-		ser.write(bytes(self.init_act))
-		time.sleep(1)
+		self.init_act_rightrleft = HeadRightLeftControl485Send(0,100)
+		self.init_act_updown = HeadUpDownControl485Send(0,100)
+		ser.write(bytes(self.init_act_rightrleft))
+		time.sleep(0.5)
+		ser.write(bytes(self.init_act_updown))
+		time.sleep(0.5)
 		self.next_rightleft_degree =0
 		self.next_updown_degree = 0
 		self.last_rigthtleft_degree = 0
@@ -42,9 +45,15 @@ class Movement(FaceRecon):
 		t.start()
 
 	def start(self):
-		self.next_rightleft_degree = -self.HeadRightLeftControl(self.offset_x)
-		self.next_updown_degree = -self.HeadupdownControl(self.offset_y)
-		self.movement(self.next_rightleft_degree,self.next_updown_degree)
+		self.next_rightleft_degree = self.HeadRightLeftControl(self.offset_x)
+		self.next_updown_degree = self.HeadupdownControl(self.offset_y)
+		
+		t1 = MyThread(self.movement_rightleft)
+		t1.start()
+		
+		t2 = MyThread(self.movement_updown)
+		t2.start()
+		
 		self.last_rigthtleft_degree = self.next_rightleft_degree
 		self.last_updown_degree = self.next_updown_degree
 
@@ -57,12 +66,12 @@ class Movement(FaceRecon):
 		if abs(offset_x) < x_offset_dead_block:
 			offset_x = 0
 		# offset范围在-60 到60左右
-		delta_degree = offset_x * rightlef_kp
+		delta_degree = -offset_x * rightlef_kp
 		# 计算得到新的左右旋转舵机的角度
 		self.next_rightleft_degree = self.last_rigthtleft_degree + delta_degree
 		# 添加边界检测
 		if self.next_rightleft_degree < -60:
-			self.next_rightleft_degree = 0
+			self.next_rightleft_degree = -60
 		elif self.next_rightleft_degree > 60:
 			self.next_rightleft_degree = 60
 
@@ -78,30 +87,33 @@ class Movement(FaceRecon):
 		if abs(offset_y) < y_offset_dead_block:
 			offset_y = 0
 		# offset范围在-60 到60左右
-		delta_degree = -offset_y * rightlef_kp
+		delta_degree = offset_y * updown_kp
 		# 计算得到新的上下旋转舵机的角度
-		next_updown_degree = self.last_updown_degree + delta_degree
+		self.next_updown_degree = self.last_updown_degree + delta_degree
 		# 添加边界检测
-		if next_updown_degree < -60:
-			next_updown_degree = 0
-		elif next_updown_degree > 60:
-			next_updown_degree = 60
-		return int(next_updown_degree)
+		if self.next_updown_degree < -40:
+			self.next_updown_degree = -40
+		elif self.next_updown_degree > 40:
+			self.next_updown_degree = 40
+		return int(self.next_updown_degree)
 
-	def movement(self,next_rightleft_degree, next_updown_degree):
+	def movement_rightleft(self):
 		# while True:
-			# time.sleep(3)
-			Out_Send_Cot = BaseMovement.HeadRightLeftControl485Send(next_rightleft_degree, 100)
-			ser.write(bytes(Out_Send_Cot))
-			time.sleep(3)
-			# Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
-			# ser.write(bytes(Out_Send_Pos))
-			# time.sleep(0.1)
-
-			Out_Send_Cot = BaseMovement.HeadUpDownControl485Send(next_updown_degree, 100)
-			ser.write(bytes(Out_Send_Cot))
-			time.sleep(3)
-
+			# time.sleep(3)	
+		Out_Send_Cot = HeadRightLeftControl485Send(self.next_rightleft_degree, 100)
+		# print(Out_Send_Cot)
+		ser.write(bytes(Out_Send_Cot))
+		# time.sleep(0.5)
+		# Out_Send_Pos = BaseMovement.HeadRightLeftPosAngle()
+		# ser.write(bytes(Out_Send_Pos))
+		# time.sleep(0.1)
+		
+			
+	def movement_updown(self):
+		Out_Send_Cot = HeadUpDownControl485Send(self.next_updown_degree, 100)
+		# print(Out_Send_Cot)
+		ser.write(bytes(Out_Send_Cot))
+		# time.sleep(0.5)
 
 class Receive():
 	def __init__(self):
@@ -183,7 +195,7 @@ if __name__ == '__main__':
 	mv = Movement.run()
 	mv.get_attr()
 	while True:
-		time.sleep(1)
+		time.sleep(0.5)
 		mv.start()
 		rc.jieshou()
 

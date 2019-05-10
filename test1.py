@@ -1,7 +1,6 @@
 import serial
 import BaseMovement
 
-
 ser=serial.Serial("COM2",115200,timeout=1)
 # Send_Buff =[0x5A,0x5A,0x08,0x02,0x33,0x3D]
 # Send_Buff =[0X01,0X03,0X00,0X00,0X00,0X01,0X84,0X0A]
