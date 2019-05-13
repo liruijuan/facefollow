@@ -38,8 +38,8 @@ class FaceRecon():
 			self.is_face = True
 			for (x, y, w, h) in self.faces:
 				cv2.rectangle(self.frame, (x,y), (x+w,y+h), (0, 0, 255),4)
-				self.calculate_offset(x, y, w, h) 
-				# print(self.offset_x,self.offset_y)
+				self.calculate_offset(x, y, w, h)
+				#print(self.offset_x,self.offset_y)
 
 				# print("leftright",self.x,"  updown",self.y)
 				# self.followface()
